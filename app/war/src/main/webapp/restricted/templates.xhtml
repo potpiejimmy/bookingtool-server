@@ -1,0 +1,157 @@
+<?xml version='1.0' encoding='UTF-8' ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:ui="http://java.sun.com/jsf/facelets"
+      xmlns:h="http://java.sun.com/jsf/html"
+      xmlns:f="http://java.sun.com/jsf/core"
+      xmlns:p="http://primefaces.org/ui">
+    
+    <ui:composition template="/WEB-INF/facelets/templates/baselayout.xhtml">
+
+       	<ui:param name="tabIndex" value="#{request.isUserInRole('admin') ? 5 : 3}" />
+
+        <ui:define name="pagetitle">Booking Templates Administration</ui:define>
+        
+        <ui:define name="body">
+        
+                    <f:metadata>
+                        <f:event type="preRenderView" listener="#{changePasswordBean.checkChangePasswordNeeded}"/>
+                        <f:event type="preRenderView" listener="#{templatesBean.checkRequestParams}"/>
+                    </f:metadata>
+                
+			<h:form id="projectform">
+			
+				<p:panelGrid columns="2">
+					<h:outputText value="Select Project:"/>
+					<p:selectOneMenu value="#{templatesBean.currentProjectId}" onchange="this.form.submit()">
+						<f:selectItems value="#{templatesBean.projectItems}"/>
+					</p:selectOneMenu>
+				</p:panelGrid>
+
+			</h:form>
+
+			<p/>
+
+			<h:form id="editform" rendered="#{templatesBean.editingAllowed}">
+			
+				<p:panelGrid columns="2">
+					<h:outputText value="ID:"/>
+					<h:outputText value="#{templatesBean.currentTemplate.id eq null ? '&lt;New&gt;' : templatesBean.currentTemplate.id}"/>
+					
+					<h:outputText value="Budget:"/>
+					<h:panelGroup>
+						<p:selectOneMenu id="budget" value="#{templatesBean.currentTemplate.budgetId}">
+							<f:selectItems value="#{templatesBean.budgetItems}"/>
+						</p:selectOneMenu>
+						<p:message for="budget" display="text"/>
+						<p:outputLabel value="Please define at least 1 budget for this project." rendered="#{not templatesBean.budgetAvailable}" styleClass="ui-message-error ui-widget"/>
+					</h:panelGroup>
+					
+					<h:outputText value="#{msg.sap_psp}:"/>
+					<h:panelGroup>
+                                            <h:panelGrid id="parentPanel" columns="1">
+						<p:inputText id="psp" size="45" value="#{templatesBean.currentTemplate.psp}"/>
+                                                <p:outputLabel value="Note: Use comma for split-bookings, append [x] for split weight (optional)."
+                                                               styleClass="ui-message-info ui-widget"/>
+						<p:message for="psp" display="text"/>
+                                            </h:panelGrid>
+					</h:panelGroup>
+					
+					<h:outputText value="#{msg.sap_pspname}:"/>
+					<h:panelGroup>
+						<p:inputText id="name" value="#{templatesBean.currentTemplate.name}" size="60"/>
+						<p:message for="name" display="text"/>
+					</h:panelGroup>
+					
+					<h:outputText value="#{msg.sap_type}:"/>
+					<p:selectOneMenu value="#{templatesBean.currentTemplate.type}">
+						<f:selectItem itemValue="0W" itemLabel="0W"/>
+						<f:selectItem itemValue="1T" itemLabel="1T"/>
+						<f:selectItem itemValue="NP" itemLabel="NP"/>
+					</p:selectOneMenu>
+					
+					<h:outputText value="#{msg.sap_salescontact}:"/>
+					<p:inputText value="#{templatesBean.currentTemplate.salesRepresentative}"/>
+					
+					<h:outputText value="#{msg.sap_subproject}:"/>
+					<p:inputText value="#{templatesBean.currentTemplate.subproject}"/>
+					
+					<h:outputText value="#{msg.sap_description}:"/>
+					<h:panelGroup>
+						<p:inputText id="description" value="#{templatesBean.currentTemplate.description}" size="80"/>
+						<p:message for="description" display="text"/>
+					</h:panelGroup>
+					
+                                        <h:outputText value="#{msg.additional_info}:"/>
+					<p:inputText value="#{templatesBean.currentTemplate.additionalInfo}" size="80"/>
+					
+					<h:outputText value="Active: " />  
+        			<p:inputSwitch value="#{templatesBean.active}" /> 
+				</p:panelGrid>
+			
+				<p:commandButton rendered="#{templatesBean.budgetAvailable}" value="#{templatesBean.currentTemplate.id eq null ? 'Create' : 'Save'}" action="#{templatesBean.save}" ajax="false"/>
+				<p:commandButton rendered="#{templatesBean.currentTemplate.id ne null}" value="Cancel" action="#{templatesBean.clear}" ajax="false"/>
+			
+			</h:form>        
+			
+			<hr/>
+			
+			<h:form id="viewform">
+			
+				<p:panelGrid columns="2">
+					<h:outputText value="Filter Budget:"/>
+					<p:selectOneMenu value="#{templatesBean.budgetFilter}" onchange="this.form.submit()">
+						<f:selectItems value="#{templatesBean.budgetFilterItems}"/>
+					</p:selectOneMenu>
+				</p:panelGrid>
+			
+				<p:dataTable value="#{templatesBean.templates}" var="t">
+					<p:column headerText="ID">
+                                            <h:outputText value="#{t.template.id}"/>
+					</p:column>
+					<p:column headerText="#{msg.sap_psp}">
+                                            <h:outputText value="#{t.template.psp}"/>
+					</p:column>
+					<p:column headerText="#{msg.sap_pspname}">
+                                            <h:outputText value="#{t.template.name}"/>
+					</p:column>
+                                        <p:column headerText="#{msg.sap_type_short}">
+                                            <h:outputText value="#{t.template.type}"/>
+					</p:column>
+                                        <p:column headerText="#{msg.sap_salescontact_short}">
+                                            <h:outputText value="#{t.template.salesRepresentative}"/>
+					</p:column>
+					<p:column headerText="#{msg.sap_subproject}">
+                                            <h:outputText value="#{t.template.subproject}"/>
+					</p:column>
+					<p:column headerText="#{msg.sap_description}">
+                                            <h:outputText value="#{t.template.description}"/>
+					</p:column>
+					<p:column headerText="#{msg.additional_info}">
+                                            <h:outputText value="#{t.template.additionalInfo}"/>
+					</p:column>
+					<p:column headerText="Budget">
+                                            <p:commandLink value="#{templatesBean.getBudgetDisplayName(t.template.budgetId)}"
+                                                           action="#{templatesBean.getRedirectToBudget(t)}"
+                                                           immediate="true"/>
+					</p:column>
+					<p:column  headerText="Active" style="text-align:center;">
+                                            <p:inputSwitch value="#{t.active}" disabled="#{not templatesBean.editingAllowed}">
+                                                <p:ajax listener="#{templatesBean.rowActiveCheckboxClicked(t)}"/>
+                                            </p:inputSwitch>
+					</p:column>
+					<p:column headerText="Actions" rendered="#{templatesBean.editingAllowed}">
+                            <p:commandLink value="Edit" action="#{templatesBean.edit(t.template)}" ajax="false"> <p:resetInput target=":editform"/> </p:commandLink>,
+                            <p:commandLink value="Copy" action="#{templatesBean.copy(t.template)}" ajax="false"/>, 
+                            <p:commandLink value="Delete" action="#{templatesBean.delete(t.template)}" ajax="false"/>
+					</p:column>
+				</p:dataTable>
+			
+			</h:form>
+
+        </ui:define>
+        
+    </ui:composition>
+    
+</html>
+

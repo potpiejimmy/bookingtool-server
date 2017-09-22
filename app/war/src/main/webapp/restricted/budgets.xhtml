@@ -1,0 +1,207 @@
+<?xml version='1.0' encoding='UTF-8' ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:ui="http://java.sun.com/jsf/facelets"
+      xmlns:h="http://java.sun.com/jsf/html"
+      xmlns:f="http://java.sun.com/jsf/core"
+      xmlns:p="http://primefaces.org/ui">
+    
+    <ui:composition template="/WEB-INF/facelets/templates/baselayout.xhtml">
+
+       	<ui:param name="tabIndex" value="#{request.isUserInRole('admin') ? 4 : 2}" />
+
+        <ui:define name="pagetitle">Budgets Administration</ui:define>
+        
+        <ui:define name="body">
+
+                    <f:metadata>
+                        <f:event type="preRenderView" listener="#{changePasswordBean.checkChangePasswordNeeded}"/>
+                        <f:event type="preRenderView" listener="#{budgetsBean.checkRequestParams}"/>
+                    </f:metadata>
+                
+			<h:form id="projectform">
+			
+				<p:panelGrid columns="2">
+					<h:outputText value="Select Project:"/>
+                                        <h:panelGroup>
+                                            <p:selectOneMenu value="#{budgetsBean.currentProjectId}" onchange="this.form.submit()">
+                                                    <f:selectItems value="#{budgetsBean.projectItems}"/>
+                                                    <f:validateLongRange minimum="1"/>
+                                            </p:selectOneMenu>
+                                            <p:outputLabel value="Please create a project first." rendered="#{budgetsBean.projectItems.size() eq 1}" styleClass="ui-message-error ui-widget"/>
+                                        </h:panelGroup>
+				</p:panelGrid>
+
+			</h:form>
+
+			<p/>
+
+                        <h:form id="editform" rendered="#{budgetsBean.editingAllowed}">
+
+				<p:panelGrid columns="3">
+					<h:outputText value="Budget ID:"/>
+					<h:outputText value="#{budgetsBean.currentBudget.id eq null ? '&lt;New&gt;' : budgetsBean.currentBudget.id}"/>
+					<p:outputPanel/>
+
+					<h:outputText value="Budget Name:"/>
+					<h:panelGroup>
+						<p:inputText id="budgetName" value="#{budgetsBean.currentBudget.name}" size="60"/>
+						<p:message id="noBudgetName" for="budgetName" display="text"/>
+					</h:panelGroup>
+					<p:outputPanel/>
+
+					<h:outputText value="Budget [hours]:"/>
+					<h:panelGroup>
+						<p:inputText  id="hours" value="#{budgetsBean.currentBudgetHours}" size="10" rendered="#{budgetsBean.currentBudgetHours ge 0}">
+							<f:validateLongRange minimum="1" />
+							<p:ajax event="keyup" update="budgetInfo" />
+						</p:inputText>
+						<p:message id="noHours" for="hours" display="text" rendered="#{budgetsBean.currentBudgetHours ge 0}"/>
+        					<p:commandLink value="#{-budgetsBean.currentBudgetHours} h" action="#{budgetsBean.showSubBudgets(budgetsBean.currentBudget)}" rendered="#{budgetsBean.currentBudgetHours lt 0}" ajax="false"/>
+					</h:panelGroup>
+					<h:outputText id="budgetInfo" value="#{budgetsBean.getFormattedBudgetTime(budgetsBean.currentBudget.minutes)}"/>
+	
+					<h:outputText value="Used:"/>
+					<h:panelGroup>
+                                            <p:progressBar rendered="#{budgetsBean.currentBudget.id ne null and budgetsBean.currentBudget.minutes gt 0}"
+                                                           labelTemplate="{value}%"
+                                                           value="#{budgetsBean.currentBudgetInfo.bookedMinutes*100/budgetsBean.currentBudget.minutes}"/>
+                                            <br/>
+					</h:panelGroup>
+					<h:panelGroup>
+                                            <h:outputText rendered="#{budgetsBean.currentBudget.id ne null and budgetsBean.currentBudget.minutes gt 0}"
+                                                          value="#{budgetsBean.getFormattedBudgetTime(budgetsBean.currentBudgetInfo.bookedMinutes)}"/>
+					</h:panelGroup>
+                                            
+					<h:outputText value="Parent Budget:"/>
+                                        <h:panelGrid id="parentPanel" columns="1">
+                                            <p:selectOneMenu id="parentBudget" value="#{budgetsBean.currentBudget.parentId}">
+                                                <f:selectItems value="#{budgetsBean.parentBudgetItems}"/>
+                                                <p:ajax event="change" update="parentPanel"/>
+                                            </p:selectOneMenu>
+                                            <p:outputLabel value="Note: Assigning to a parent will update the parent's budget hours to the sum of its child budgets."
+                                                           rendered="#{budgetsBean.currentBudget.parentId gt 0}" styleClass="ui-message-info ui-widget"/>
+                                        </h:panelGrid>
+					<p:outputPanel/>
+					
+					<h:outputText value="Allow overrun:" />  
+                                        <p:inputSwitch value="#{budgetsBean.allowOverrun}" /> 
+                                
+				</p:panelGrid>
+
+                                <p>
+				    <p:commandButton value="#{budgetsBean.currentBudget.id eq null ? 'Create' : 'Save'}" action="#{budgetsBean.save}" ajax="false"/>
+				    <p:commandButton rendered="#{budgetsBean.currentBudget.id ne null}" value="Cancel" action="#{budgetsBean.clear}" ajax="false"/>
+                                </p>
+			
+			</h:form>        
+			
+			<hr/>
+			
+			<h:form id="viewform">
+			
+                            <p:panelGrid columns="2" style="float:left;">
+                                <h:outputText value="Filter Parent Budget:"/>
+                                <p:selectOneMenu value="#{budgetsBean.parentFilter}" onchange="this.form.submit()">
+                                        <f:selectItems value="#{budgetsBean.budgetFilterItems}"/>
+                                </p:selectOneMenu>
+                            </p:panelGrid>
+                            <h:panelGrid columns="2" style="float:right;">
+                                <p:commandButton action="#{budgetsBean.refreshList}" ajax="false" icon="fa fa-refresh" title="Refresh list"/>
+                                <p:commandButton id="exportBudgets"
+                                                 value="Export"
+                                                 ajax="false"
+                                                 onclick="PrimeFaces.monitorDownload(start, stop)"
+                                                 icon="fa fa-file-excel-o">
+                                    <p:fileDownload value="#{budgetsBean.exportBudgets}" />  
+                                </p:commandButton>
+                            </h:panelGrid>
+                            
+                            <div style="clear:both;">
+			
+                            <p:dataTable id="outputTable" value="#{budgetsBean.budgets}" var="b">
+					<p:column headerText="ID">
+						<h:outputText value="#{b.budget.id}"/>
+					</p:column>
+					<p:column headerText="Name">
+                                            <h:outputText value="#{budgetsBean.getFullBudgetName(b.budget)}" rendered="#{b.budget.minutes ge 0 and budgetsBean.parentFilter lt 0}"/>
+                                            <h:commandLink value="#{budgetsBean.getFullBudgetName(b.budget)}" rendered="#{b.budget.minutes lt 0 and budgetsBean.parentFilter lt 0}" action="#{budgetsBean.showSubBudgets(b.budget)}"/>
+                                            <h:outputText value="#{b.budget.name}" rendered="#{b.budget.minutes ge 0 and budgetsBean.parentFilter ge 0}"/>
+                                            <h:commandLink value="#{b.budget.name}" rendered="#{b.budget.minutes lt 0 and budgetsBean.parentFilter ge 0}" action="#{budgetsBean.showSubBudgets(b.budget)}"/>
+					</p:column>
+					<p:column headerText="Budget">
+						<h:outputText value="#{budgetsBean.getFormattedBudgetTime(b.budget.minutes)}"/>
+					</p:column>
+					<p:column headerText="Used">
+						<h:outputText value="#{budgetsBean.getFormattedBudgetTime(b.bookedMinutesRecursive)}"/>
+					</p:column>
+					<p:column headerText="Progress">
+						<p:progressBar rendered="#{b.budget.minutes ne 0}"
+						               labelTemplate="{value}%"
+						               value="#{b.bookedMinutesRecursive*100/(b.budget.minutes ge 0 ? b.budget.minutes : -b.budget.minutes)}"/>
+					</p:column>
+                                        <p:column headerText="Templates">
+                                                <p:outputPanel style="float: left" rendered="#{b.numberOfTemplates gt 0}">
+                                                        <h:outputLink value="templates.xhtml?filter=#{b.budget.id}">
+                                                            <h:outputText value="#{b.numberOfTemplates}"/>
+                                                        </h:outputLink>
+                                                </p:outputPanel>
+                                                <ui:include src="/WEB-INF/facelets/editButton.xhtml">
+                                                    <ui:param name="outcome" value="templates"/>
+                                                    <ui:param name="renderingAllowed" value="#{budgetsBean.editingAllowed}"/>
+                                                    <ui:param name="toolTip" value="#{msg.create_template_tooltip}"/>
+                                                    <ui:param name="paramName" value="create"/>
+                                                    <ui:param name="paramValue" value="#{b.budget.id}"/>
+                                                    <ui:param name="icon" value="fa-plus-circle"/>
+                                                </ui:include>  
+					</p:column>
+					<p:column headerText="Bookings">
+						<p:commandLink ajax="false"
+						               rendered="#{b.bookedMinutes gt 0}"
+                                                               disabled="#{not budgetsBean.editingAllowed}">
+						    <h:outputText value="#{budgetsBean.getFormattedBudgetTime(b.bookedMinutes)}"/>
+						    <p:fileDownload value="#{excelExportBean.getExcelListForBudget(b.budget.id)}" />
+						</p:commandLink>
+					</p:column>
+					<p:column headerText="Actions" rendered="#{budgetsBean.editingAllowed}">
+	                    <p:commandLink value="Edit" action="#{budgetsBean.edit(b.budget)}" ajax="false">
+                                <p:resetInput target=":editform"/>
+                            </p:commandLink>,  
+	                    <p:commandLink value="Delete" action="#{budgetsBean.delete(b.budget)}" ajax="false"/>, 
+                            <p:commandLink value="Move" oncomplete="PF('moveBudgetDialog').show()" update=":moveDialogPanel">
+                        	<f:setPropertyActionListener value="#{b.budget}" target="#{budgetsBean.selectedBudget}" />
+                            </p:commandLink>, 
+                            <p:commandLink value="Clone" oncomplete="PF('cloneBudgetDialog').show()" update=":cloneDialogPanel">
+                        	<f:setPropertyActionListener value="#{b.budget}" target="#{budgetsBean.selectedBudget}" />
+                            </p:commandLink>
+					</p:column>
+                            </p:dataTable>
+                            </div>
+			</h:form>
+
+        <p:outputPanel id="moveDialogPanel">
+            <ui:include src="/WEB-INF/facelets/dialogboxmovebudget.xhtml">
+                <ui:param name="widgetVar" value="moveBudgetDialog"/>
+                <ui:param name="headerText" value="Move the budget to a different project?"/>
+                <ui:param name="dialogText" value="The budget will be moved to a root position of the target project."/>
+                <ui:param name="bean" value="#{budgetsBean}"/>
+                <ui:param name="action" value="moveSelectedBudget"/>
+            </ui:include>
+        </p:outputPanel>      
+                        
+        <p:outputPanel id="cloneDialogPanel">
+            <ui:include src="/WEB-INF/facelets/dialogboxmovebudget.xhtml">
+                <ui:param name="widgetVar" value="cloneBudgetDialog"/>
+                <ui:param name="headerText" value="Clone the budget into another project?"/>
+                <ui:param name="dialogText" value="#{msg.clone_budget_dialog_text}"/>
+                <ui:param name="bean" value="#{budgetsBean}"/>
+                <ui:param name="action" value="cloneSelectedBudget"/>
+            </ui:include>
+        </p:outputPanel>                
+                        
+        </ui:define>
+        
+    </ui:composition>
+    
+</html>
+

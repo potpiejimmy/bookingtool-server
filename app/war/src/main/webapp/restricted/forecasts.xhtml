@@ -1,0 +1,370 @@
+<?xml version='1.0' encoding='UTF-8' ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:ui="http://java.sun.com/jsf/facelets"
+      xmlns:h="http://java.sun.com/jsf/html"
+      xmlns:f="http://java.sun.com/jsf/core"
+      xmlns:p="http://primefaces.org/ui"
+      xmlns:c="http://java.sun.com/jsp/jstl/core">
+    
+    <ui:composition template="/WEB-INF/facelets/templates/baselayout.xhtml">
+
+       	<ui:param name="tabIndex" value="9" />
+
+        <ui:define name="pagetitle">Forecasts Administration</ui:define>
+        
+        <ui:define name="body">
+
+            <f:metadata>
+                <f:event type="preRenderView" listener="#{changePasswordBean.checkChangePasswordNeeded}"/>
+            </f:metadata>
+                
+            <h:form id="listform" rendered="#{forecastsBean.current eq null}">
+                
+                <p:dataTable id="forecasts" var="f" value="#{forecastsBean.forecasts}">
+                    <p:column headerText="Name">
+                        <i class="fa fa-bar-chart" style="font-size: 20pt; vertical-align: middle;"/>
+                        <span> </span>
+                        <p:commandLink value="#{f.name}" style="font-size: 12pt; vertical-align: middle;" action="#{forecastsBean.edit(f)}" ajax="false"/>
+                    </p:column>
+                    <p:column headerText="Actions" rendered="#{request.isUserInRole('admin')}">
+                        <p:commandLink value="Show / Edit" action="#{forecastsBean.edit(f)}" ajax="false"/>,
+                        <p:commandLink value="Delete" oncomplete="PF('confirmDeleteDialog').show()">
+  	                       <f:setPropertyActionListener value="#{f}" target="#{forecastsBean.selected}" />
+  						</p:commandLink>
+                    </p:column>
+                </p:dataTable>
+                <p>
+                    <p:commandLink value="New forecast" action="#{forecastsBean.newForecast}" ajax="false"/>
+                </p>
+            </h:form>
+            
+            <ui:include src="/WEB-INF/facelets/dialogbox.xhtml">
+                <ui:param name="widgetVar" value="confirmDeleteDialog"/>
+                <ui:param name="headerText" value="Do you want to delete this forecast?"/>
+                <ui:param name="bean" value="#{forecastsBean}"/>
+                <ui:param name="action" value="deleteSelected"/>
+            </ui:include>
+            
+            <h:form id="forecastviewform" rendered="#{forecastsBean.current ne null and forecastsBean.current.id ne null}">
+                
+                <p:panel header="#{forecastsBean.current.name}">
+                
+                    <p:selectBooleanButton value="#{forecastsBean.showDetails}"
+                                           onLabel="Showing Details" offLabel="Show Details"
+                                           onIcon="ui-icon-check">  
+                        <p:ajax update=":forecastviewform"/>
+                    </p:selectBooleanButton>  
+                    
+                    <p:selectBooleanButton value="#{forecastsBean.hidePast}"
+                                           onLabel="Hiding Past Months" offLabel="Hide Past Months"
+                                           onIcon="ui-icon-check">  
+                        <p:ajax update=":forecastviewform"/>
+                    </p:selectBooleanButton>  
+                    
+                    <p:selectBooleanButton value="#{forecastsBean.showIfrs}"
+                                           onLabel="Show XLE Billing" offLabel="Show IFRS Billing">  
+                        <p:ajax update=":forecastviewform"/>
+                    </p:selectBooleanButton>  
+                    
+                    <p:commandButton id="downloadPlan"
+                                     value="Export Plan Data"
+                                     ajax="false"
+                                     onclick="PrimeFaces.monitorDownload(start, stop)"
+                                     icon="fa fa-file-excel-o">
+                        <p:fileDownload value="#{forecastsBean.exportPlanData}" />  
+                    </p:commandButton>
+                    
+                    <p:commandButton id="downloadSalesReport"
+                                     value="Sales Report"
+                                     ajax="false"
+                                     onclick="PrimeFaces.monitorDownload(start, stop)"
+                                     icon="fa fa-file-excel-o">
+                        <p:fileDownload value="#{forecastsBean.salesReport}" />  
+                    </p:commandButton>
+
+                    <h:panelGrid columns="1" style="float:right;">
+                        <p:commandButton action="#{forecastsBean.refreshList}" ajax="false" icon="fa fa-refresh" title="Refresh list"/>
+                    </h:panelGrid>
+                    
+                    <p:ajaxStatus style="width:16px;height:16px;" id="ajaxStatusPanel">  
+                        <f:facet name="start">  
+                            <h:graphicImage value="/webres/img/ajax-loader.gif" />  
+                        </f:facet>  
+
+                        <f:facet name="complete">  
+                            <h:outputText value="" />  
+                        </f:facet>  
+                    </p:ajaxStatus>  
+                    
+                    <h:panelGroup rendered="#{!forecastsBean.showIfrs}">
+                        <h:outputText value="XLE billing rate "/>
+                        <h:outputText value="#{forecastsBean.centsPerHour}">
+                            <f:convertNumber type="currency" currencyCode="EUR" locale="de_DE"/>
+                        </h:outputText>
+                    </h:panelGroup>
+                    <h:panelGroup rendered="#{forecastsBean.showIfrs}">
+                        <h:outputText value="IFRS billing rate "/>
+                        <h:outputText value="#{forecastsBean.centsPerHourIfrs}">
+                            <f:convertNumber type="currency" currencyCode="EUR" locale="de_DE"/>
+                        </h:outputText>
+                    </h:panelGroup>
+
+                    <p:dataTable value="#{forecastsBean.forecastRows}" var="vo"
+                                 rowIndexVar="i">
+                        <p:column styleClass="#{vo.summaryRow ? 'rowhighlight' : null}" headerText="Budget Plan">
+                            <p:commandLink value="#{forecastsBean.getBudgetDisplayName(vo.budgetInfo.budget)}"
+                                           action="#{forecastsBean.getRedirectToBudget(vo)}"
+                                           immediate="true"/>
+                        </p:column>
+                        <p:columns styleClass="#{vo.summaryRow ? 'rowhighlight' : null}" value="#{forecastsBean.monthColumnsForDisplay}" var="month" columnIndexVar="monthIndex" style="width:80px;text-align:right;">
+                            <f:facet name="header">
+                                <h:outputText value="#{budgetPlansBean.formatPeriodName(month, monthIndex eq 0 or month%100 eq 1)}"/>
+                            </f:facet>
+                            <h:outputText value="#{budgetsBean.getFormattedBudgetTime(vo.months[month].plannedMinutes)}"
+                                          rendered="#{!vo.summaryRow}"/>
+                            <br/>
+                            <h:outputText style="color: green;"
+                                          value="#{forecastsBean.getFormattedBudgetOffset(vo.months[month].bookedMinutes - vo.months[month].plannedMinutes)}"
+                                          rendered="#{forecastsBean.currentMonth ge month and (vo.months[month].bookedMinutes - vo.months[month].plannedMinutes) le 0}"/>
+                            <h:outputText style="color: red;"
+                                          value="#{forecastsBean.getFormattedBudgetOffset(vo.months[month].bookedMinutes - vo.months[month].plannedMinutes)}"
+                                          rendered="#{forecastsBean.currentMonth ge month and (vo.months[month].bookedMinutes - vo.months[month].plannedMinutes) gt 0}"/>
+                        </p:columns>
+                        <p:columnGroup type="footer">
+                            <p:row>
+                                <p:column style="text-align: right;" footerText="Planned:"/>
+                                <c:forEach items="#{forecastsBean.monthColumnsForDisplay}" var="month">
+                                    <p:column style="text-align: right;" footerText="#{budgetsBean.getFormattedBudgetTime(forecastsBean.getColumnSumMinutesPlanned(month))}"/>
+                                </c:forEach>>
+                            </p:row>
+                            <p:row>
+                                <p:column style="text-align: right;" footerText="Used:"/>
+                                <c:forEach items="#{forecastsBean.monthColumnsForDisplay}" var="month">
+                                    <p:column style="text-align: right;">
+                                        <f:facet name="footer">
+                                            <h:outputText value="#{budgetsBean.getFormattedBudgetTime(forecastsBean.getColumnSumMinutesBooked(month))}"
+                                                          rendered="#{forecastsBean.currentMonth ge month}"/>
+                                        </f:facet>
+                                    </p:column>
+                                </c:forEach>>
+                            </p:row>
+                            <p:row>
+                                <p:column style="text-align: right;" footerText="Planned [EUR]:"/>
+                                <c:forEach items="#{forecastsBean.monthColumnsForDisplay}" var="month">
+                                    <p:column style="text-align: right;">
+                                        <f:facet name="footer">
+                                            <h:outputText value="#{forecastsBean.getColumnSumEurosPlanned(month)}">
+                                                <f:convertNumber type="currency" currencyCode="EUR" locale="de_DE"/>
+                                            </h:outputText>
+                                        </f:facet>
+                                    </p:column>
+                                </c:forEach>>
+                            </p:row>
+                            <p:row>
+                                <p:column style="text-align: right;" footerText="Used [EUR]:"/>
+                                <c:forEach items="#{forecastsBean.monthColumnsForDisplay}" var="month">
+                                    <p:column style="text-align: right;">
+                                        <f:facet name="footer">
+                                            <h:outputText value="#{forecastsBean.getColumnSumEurosBooked(month)}"
+                                                          rendered="#{forecastsBean.currentMonth ge month}">
+                                                <f:convertNumber type="currency" currencyCode="EUR" locale="de_DE"/>
+                                            </h:outputText>
+                                        </f:facet>
+                                    </p:column>
+                                </c:forEach>>
+                            </p:row>
+                            <p:row>
+                                <p:column style="text-align: right;" footerText="Plan Diff [EUR]:"/>
+                                <c:forEach items="#{forecastsBean.monthColumnsForDisplay}" var="month">
+                                    <p:column style="text-align: right;">
+                                        <f:facet name="footer">
+                                            <h:outputText value="#{forecastsBean.getColumnSumEurosDiff(month)}" rendered="#{forecastsBean.currentMonth gt month and forecastsBean.getColumnSumEurosDiff(month) ge 0}" style="color:green;">
+                                                <f:convertNumber type="currency" currencyCode="EUR" locale="de_DE"/>
+                                            </h:outputText>
+                                            <h:outputText value="#{forecastsBean.getColumnSumEurosDiff(month)}" rendered="#{forecastsBean.currentMonth gt month and forecastsBean.getColumnSumEurosDiff(month) lt 0}" style="color:red;">
+                                                <f:convertNumber type="currency" currencyCode="EUR" locale="de_DE"/>
+                                            </h:outputText>
+                                        </f:facet>
+                                    </p:column>
+                                </c:forEach>>
+                            </p:row>
+                            <p:row>
+                                <p:column style="text-align: right;" footerText="Yearly Budget [EUR]:"/>
+                                <c:forEach items="#{forecastsBean.monthColumnsForDisplay}" var="month">
+                                    <p:column style="text-align: right;">
+                                        <f:facet name="footer">
+                                            <h:outputText value="#{forecastsBean.current.fcBudgetCents/1200}">
+                                                <f:convertNumber type="currency" currencyCode="EUR" locale="de_DE"/>
+                                            </h:outputText>
+                                        </f:facet>
+                                    </p:column>
+                                </c:forEach>>
+                            </p:row>
+                            <p:row>
+                                <p:column style="text-align: right;" footerText="Yearly Budget Diff [EUR]:"/>
+                                <c:forEach items="#{forecastsBean.monthColumnsForDisplay}" var="month">
+                                    <p:column style="text-align: right;">
+                                        <f:facet name="footer">
+                                            <h:outputText value="#{forecastsBean.getColumnSumEurosDiffFcBudget(month)}" rendered="#{forecastsBean.currentMonth gt month and forecastsBean.getColumnSumEurosDiffFcBudget(month) ge 0}" style="color:green;">
+                                                <f:convertNumber type="currency" currencyCode="EUR" locale="de_DE"/>
+                                            </h:outputText>
+                                            <h:outputText value="#{forecastsBean.getColumnSumEurosDiffFcBudget(month)}" rendered="#{forecastsBean.currentMonth gt month and forecastsBean.getColumnSumEurosDiffFcBudget(month) lt 0}" style="color:red;">
+                                                <f:convertNumber type="currency" currencyCode="EUR" locale="de_DE"/>
+                                            </h:outputText>
+                                        </f:facet>
+                                    </p:column>
+                                </c:forEach>>
+                            </p:row>
+                        </p:columnGroup>
+                    </p:dataTable>
+                    
+                    <p:panelGrid columns="3" style="text-align: right;">
+                        <h:outputText value="Yearly Budget:"/>
+                        <h:panelGroup>
+                            <h:outputText value="#{forecastsBean.current.fcBudgetCents / 100}">
+                                <f:convertNumber type="currency" currencyCode="EUR" locale="de_DE"/>
+                            </h:outputText>
+                        </h:panelGroup>
+                        <h:panelGroup/>
+
+                        <h:outputText value="Sum Plan Diff:"/>
+                        <h:panelGroup>
+                            <h:outputText value="#{forecastsBean.totalSumEurosDiff}" rendered="#{forecastsBean.totalSumEurosDiff ge 0}" style="color:green;">
+                                <f:convertNumber type="currency" currencyCode="EUR" locale="de_DE"/>
+                            </h:outputText>
+                            <h:outputText value="#{forecastsBean.totalSumEurosDiff}" rendered="#{forecastsBean.totalSumEurosDiff lt 0}" style="color:red;">
+                                <f:convertNumber type="currency" currencyCode="EUR" locale="de_DE"/>
+                            </h:outputText>
+                        </h:panelGroup>
+                        <h:panelGroup/>
+
+                        <h:outputText value="Sum Yearly Budget Diff:"/>
+                        <h:panelGroup>
+                            <h:outputText value="#{forecastsBean.totalSumEurosDiffFcBudget}" rendered="#{forecastsBean.totalSumEurosDiffFcBudget ge 0}" style="color:green;">
+                                <f:convertNumber type="currency" currencyCode="EUR" locale="de_DE"/>
+                            </h:outputText>
+                            <h:outputText value="#{forecastsBean.totalSumEurosDiffFcBudget}" rendered="#{forecastsBean.totalSumEurosDiffFcBudget lt 0}" style="color:red;">
+                                <f:convertNumber type="currency" currencyCode="EUR" locale="de_DE"/>
+                            </h:outputText>
+                        </h:panelGroup>
+                        <h:panelGroup/>
+
+                        <h:outputText value="Yearly Budget Planned:"/>
+                        <h:panelGroup>
+                            <h:outputText value="#{forecastsBean.totalSumEurosPlanned}">
+                                <f:convertNumber type="currency" currencyCode="EUR" locale="de_DE"/>
+                            </h:outputText>
+                        </h:panelGroup>
+                        <p:progressBar style="width: 80px;"
+                                       labelTemplate="{value}%"
+                                       value="#{forecastsBean.totalSumEurosPlanned*10000/forecastsBean.current.fcBudgetCents}"/>
+
+                        <h:outputText value="Yearly Budget Used:"/>
+                        <h:panelGroup>
+                            <h:outputText value="#{forecastsBean.totalSumEurosBooked}">
+                                <f:convertNumber type="currency" currencyCode="EUR" locale="de_DE"/>
+                            </h:outputText>
+                        </h:panelGroup>
+                        <p:progressBar labelTemplate="{value}%"
+                                       value="#{forecastsBean.totalSumEurosBooked*10000/forecastsBean.current.fcBudgetCents}"/>
+                        
+                        <h:outputText value="Yearly Budget Forecast:"/>
+                        <h:panelGroup>
+                            <h:outputText value="#{forecastsBean.totalSumEurosPlanned - forecastsBean.totalSumEurosDiff}">
+                                <f:convertNumber type="currency" currencyCode="EUR" locale="de_DE"/>
+                            </h:outputText>
+                        </h:panelGroup>
+                        <p:progressBar labelTemplate="{value}%"
+                                       value="#{(forecastsBean.totalSumEurosPlanned - forecastsBean.totalSumEurosDiff)*10000/forecastsBean.current.fcBudgetCents}"/>
+                        
+                    </p:panelGrid>
+                    
+                </p:panel>
+                
+            </h:form>
+
+            <h:form id="editforecastform" rendered="#{forecastsBean.current ne null}">
+
+                <hr/>
+			
+                <p:panel header="#{forecastsBean.current.id eq null ? 'Create' : 'Edit'} forecast">
+
+                    <p:panelGrid columns="3" style="text-align: right;">
+
+                            <h:outputText value="Forecast ID:"/>
+                            <h:outputText value="#{forecastsBean.current.id eq null ? '&lt;New&gt;' : forecastsBean.current.id}"/>
+                            <p:outputPanel/>
+
+                            <h:outputText value="Forecast Name:"/>
+                            <p:inputText id="forecastName" value="#{forecastsBean.current.name}" size="32" required="true"/>
+                            <p:message for="forecastName"/>
+                            
+                            <h:outputText value="Domain:"/>
+                            <h:panelGroup style="text-align: left;">
+                                <p:selectOneMenu id="fcDomain" value="#{forecastsBean.current.domainId}">
+                                        <f:selectItems value="#{projectsBean.domainItems}"/>
+                                        <f:validateLongRange minimum="1"/>
+                                </p:selectOneMenu>
+                                <p:outputLabel value="Bitte mindestens eine Domain anlegen bzw zuweisen." rendered="#{projectsBean.domainItems.size() eq 1}" styleClass="ui-message-error ui-widget"/>
+                            </h:panelGroup>
+                            <p:message for="fcDomain"/>
+
+                            <h:outputText value="Fiscal Year:"/>
+                            <p:inputText id="fiscalYear" style="text-align: right;" value="#{forecastsBean.current.fiscalYear}" size="4" required="true">
+                                <f:validateLongRange minimum="2000" maximum="3000"/>
+                            </p:inputText>
+                            <p:message for="fiscalYear"/>
+                            
+                            <h:outputText value="Forecast Yearly Budget Amount:"/>
+                            <h:panelGroup>
+                                <h:outputLabel for="budgetAmount" value="EUR "/>
+                                <p:inputText id="budgetAmount" style="text-align: right;" value="#{forecastsBean.fcBudgetCents}" size="12" required="true">
+                                    <f:convertNumber locale="de_DE" maxFractionDigits="2" minFractionDigits="2"/>
+                                </p:inputText>
+                            </h:panelGroup>
+                            <p:message for="budgetAmount"/>
+                            
+                            <h:outputText value="Billing Rate XLE [EUR/h]:"/>
+                            <h:panelGroup>
+                                <h:outputLabel for="hourRate" value="EUR "/>
+                                <p:inputText id="hourRate" style="text-align: right;" value="#{forecastsBean.centsPerHour}" size="6" required="true">
+                                    <f:convertNumber locale="de_DE" maxFractionDigits="2" minFractionDigits="2"/>
+                                </p:inputText>
+                            </h:panelGroup>
+                            <p:message for="hourRate"/>
+                            
+                            <h:outputText value="Billing Rate IFRS [EUR/h]:"/>
+                            <h:panelGroup>
+                                <h:outputLabel for="hourRateIfrs" value="EUR "/>
+                                <p:inputText id="hourRateIfrs" style="text-align: right;" value="#{forecastsBean.centsPerHourIfrs}" size="6" required="true">
+                                    <f:convertNumber locale="de_DE" maxFractionDigits="2" minFractionDigits="2"/>
+                                </p:inputText>
+                            </h:panelGroup>
+                            <p:message for="hourRate"/>
+                            
+                    </p:panelGrid>
+
+                    <p>
+                        <h:outputText value="Assigned Budget Plans:"/><br/>
+                        <p:pickList id="assignedPlans" value="#{forecastsBean.assignedBudgetPlans}" var="item"
+                                    converter="#{forecastsBean}"
+                                    itemLabel="#{budgetsBean.getFullBudgetNameForId(item.budgetId)}"
+                                    itemValue="#{item}"/>
+                        <p:message for="assignedPlans"/>
+                    </p>
+                        
+                    <p>
+                        <p:commandButton value="#{forecastsBean.current.id eq null ? 'Create' : 'Save'}" action="#{forecastsBean.save}" ajax="false"/>
+                        <p:commandButton value="Cancel" action="#{forecastsBean.clear}" ajax="false" immediate="true"/>
+                    </p>
+                </p:panel>
+
+            </h:form>        
+
+        </ui:define>
+        
+    </ui:composition>
+    
+</html>
+

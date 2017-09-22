@@ -1,0 +1,148 @@
+<?xml version='1.0' encoding='UTF-8' ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:ui="http://java.sun.com/jsf/facelets"
+      xmlns:h="http://java.sun.com/jsf/html"
+      xmlns:f="http://java.sun.com/jsf/core"
+      xmlns:p="http://primefaces.org/ui">
+    
+    <ui:composition template="/WEB-INF/facelets/templates/baselayout.xhtml">
+
+       	<ui:param name="tabIndex" value="1" />
+
+        <ui:define name="pagetitle">Excel Export</ui:define>
+        
+        <ui:define name="body">
+        
+                    <f:metadata>
+                        <f:event type="preRenderView" listener="#{changePasswordBean.checkChangePasswordNeeded}"/>
+                    </f:metadata>
+
+	        <h:form id="from">
+	           
+                    <p:accordionPanel>
+                        <p:tab title="Export all bookings for #{excelExportBean.currentUserName}">
+                    
+	                    <p:panelGrid columns="2">
+                                
+                                <h:outputText value="SAP CATS Format"/>
+                                <h:outputText value="PPM Format"/>
+                                
+                                <h:panelGroup>
+                                    <p:outputLabel value="Export last "/>
+                                        <p:spinner id="weeksToExport" value="#{excelExportBean.weeksToExport}" size="8" min="1" max="999" maxlength="3">
+                                            <f:validateLongRange minimum="1"/>
+                                        </p:spinner>
+                                        <h:outputText value="  week(s)"/>
+                                </h:panelGroup>
+                                <h:panelGroup>
+                                        <h:outputText value="KW: "/>
+                                        <p:spinner id="kwToExport" value="#{excelExportBean.kwToExport}" size="6" min="1" max="52" maxlength="3">
+                                            <f:validateLongRange minimum="1"/>
+                                        </p:spinner>
+                                        <p:spinner id="kwYearToExport" value="#{excelExportBean.kwYearToExport}" size="10" min="1970" max="2100" maxlength="4">
+                                            <f:validateLongRange minimum="1970"/>
+                                        </p:spinner>
+                                </h:panelGroup>
+
+                                <p:commandButton id="downloadLink" value="Download for CATS" ajax="false" onclick="PrimeFaces.monitorDownload(start, stop)"
+                                                                 icon="fa fa-download">
+                                                <p:fileDownload value="#{excelExportBean.excelList}" />  
+                                </p:commandButton>
+                                <p:commandButton id="downloadLinkPpm" value="Download for PPM" ajax="false" onclick="PrimeFaces.monitorDownload(start, stop)"
+                                                                 icon="fa fa-download">
+                                                <p:fileDownload value="#{excelExportBean.excelPpm}" />  
+                                </p:commandButton>
+                                
+                            </p:panelGrid>
+                            
+                        </p:tab>
+
+                        <p:tab title="Export all bookings for a project (Project Managers only)" rendered="#{request.isUserInRole('admin')}">
+	                    <p:panelGrid columns="2" id="excelByProject">
+	                    	<p:outputLabel value="Select a project: "/>
+                                <p:selectOneMenu id="projectToExport" value="#{excelExportBean.projectToExport}">
+                                    <f:selectItems value="#{excelExportBean.managedProjectItems}"/>
+                                </p:selectOneMenu>
+                                
+	                    	<p:outputLabel value="Export last"/>
+	                    	<h:panelGroup>
+	                    		<p:spinner id="projectMonthsToExport" value="#{excelExportBean.monthsToExport}" size="8" min="0" max="999" maxlength="3">
+                                            <f:validateLongRange minimum="0"/>
+                                        </p:spinner>
+	                    		<h:outputText value="  month(s)"/>
+	                    	</h:panelGroup>
+	                    </p:panelGrid>
+	                    
+	                    <p>
+	                    	<p:commandButton id="downloadLinkProject" value="Download" ajax="false" onclick="PrimeFaces.monitorDownload(start, stop)"   
+	                    					 icon="fa fa-download">  
+                                                <p:fileDownload value="#{excelExportBean.excelListProject}" />  
+	                    	</p:commandButton>
+	                    </p>
+                        </p:tab>
+
+                        <p:tab title="Export all bookings (Superuser Only)" rendered="#{request.isUserInRole('superuser')}">
+                    
+	                    <p:panelGrid columns="2" id="excelByMonths">
+	                    	<p:outputLabel value="Export last"/>
+	                    	<h:panelGroup>
+	                    		<p:spinner id="monthsToExport" value="#{excelExportBean.monthsToExport}" size="8" min="0" max="999" maxlength="3">
+                                            <f:validateLongRange minimum="0"/>
+                                        </p:spinner>
+	                    		<h:outputText value="  month(s)"/>
+	                    	</h:panelGroup>
+	                    </p:panelGrid>
+	                    
+	                    <p>
+	                    	<p:commandButton id="downloadLinkAdmin" value="Download" ajax="false" onclick="PrimeFaces.monitorDownload(start, stop)"   
+	                    					 icon="fa fa-download">  
+	                    				<p:fileDownload value="#{excelExportBean.excelListAdmin}" />  
+	                    	</p:commandButton>
+	                    </p>
+                        
+                        </p:tab>
+
+                        <p:tab title="Export Resource Plans" rendered="#{excelExportBean.managedResourceTeamItems.size() gt 0}">
+
+                            <p:panelGrid columns="2">
+	                    	<p:outputLabel value="Team:"/>
+                                <p:selectOneMenu value="#{excelExportBean.teamToExport}">
+                                    <f:selectItems value="#{excelExportBean.managedResourceTeamItems}"/>
+                                </p:selectOneMenu>
+                                <p:outputLabel value="No. of weeks"/>
+	                    	<h:panelGroup>
+	                    		<p:spinner id="weeksToExportResPlan" value="#{excelExportBean.weeksToExportResPlan}" size="8" min="0" max="999" maxlength="3">
+                                            <f:validateLongRange minimum="0"/>
+                                        </p:spinner>
+	                    		<h:outputText value="  week(s)"/>
+	                    	</h:panelGroup>
+	                    </p:panelGrid>
+	                    
+	                    <p>
+	                    	<p:commandButton id="downloadLinkResPlan" value="Download" ajax="false" onclick="PrimeFaces.monitorDownload(start, stop)"   
+	                    					 icon="fa fa-download">  
+	                    				<p:fileDownload value="#{excelExportBean.resourcePlan}" />  
+	                    	</p:commandButton>
+	                    </p>
+                        
+                        </p:tab>
+                    
+                        <p:tab title="Export Grindstone tasks for #{excelExportBean.currentUserName}">
+                        <p>
+                            <p:commandButton id="downloadLinkGrindstone" value="Download" ajax="false" onclick="PrimeFaces.monitorDownload(start, stop)"
+                                                             icon="fa fa-download">
+                                <p:fileDownload value="#{excelExportBean.excelListForGrindstone}" />  
+                            </p:commandButton>
+                        </p> 
+                        </p:tab>
+                        
+                    </p:accordionPanel>
+                    
+	        </h:form>
+
+        </ui:define>
+        
+    </ui:composition>
+    
+</html>

@@ -1,0 +1,123 @@
+<?xml version='1.0' encoding='UTF-8' ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:ui="http://java.sun.com/jsf/facelets"
+      xmlns:h="http://java.sun.com/jsf/html"
+      xmlns:f="http://java.sun.com/jsf/core"
+      xmlns:p="http://primefaces.org/ui">
+    
+    <ui:composition template="/WEB-INF/facelets/templates/baselayout.xhtml">
+
+       	<ui:param name="tabIndex" value="3" />
+
+        <ui:define name="pagetitle">Projects Administration</ui:define>
+        
+        <ui:define name="body">
+        
+                    <f:metadata>
+                        <f:event type="preRenderView" listener="#{changePasswordBean.checkChangePasswordNeeded}"/>
+                    </f:metadata>
+                
+			<h:form id="editform">
+			
+				<p:panelGrid columns="2">
+					<h:outputText value="Project ID:"/>
+					<h:outputText value="#{projectsBean.currentProject.id eq null ? '&lt;New&gt;' : projectsBean.currentProject.id}"/>
+					<h:outputText value="Project Name:"/>
+					<h:panelGroup>
+						<p:inputText id="project" value="#{projectsBean.currentProject.name}"/>
+						<p:message id="noProject" for="project" display="text"/>
+					</h:panelGroup>
+					<h:outputText value="Default PSP (optional):"/>
+					<h:panelGroup>
+                                                <p:inputText id="psp" value="#{projectsBean.currentProject.psp}"/>
+						<p:message for="psp" display="text"/>
+					</h:panelGroup>
+					<h:outputText value="Status:"/>
+                                        <h:panelGroup>
+                                            <p:selectOneMenu id="statusSel" value="#{projectsBean.currentProject.status}">
+                                                    <f:selectItems value="#{projectsBean.statusItems}"/>
+                                            </p:selectOneMenu>
+                                            <p:message for="statusSel" display="text"/>
+                                        </h:panelGroup>
+					<h:outputText value="Domain:"/>
+                                        <h:panelGroup>
+                                            <p:selectOneMenu id="domainSel" value="#{projectsBean.currentProject.domainId}">
+                                                    <f:selectItems value="#{projectsBean.domainItems}"/>
+                                                    <f:validateLongRange minimum="1"/>
+                                                    <p:ajax listener="#{projectsBean.updateManagersPickList}" update="assignedManagers"/>
+                                            </p:selectOneMenu>
+                                            <p:outputLabel value="Bitte mindestens eine Domain anlegen bzw. zuweisen." rendered="#{projectsBean.domainItems.size() eq 1}" styleClass="ui-message-error ui-widget"/>
+                                            <p:message for="domainSel" display="text"/>
+                                        </h:panelGroup>
+				</p:panelGrid>
+				
+                            <p>
+                                <p:panel>
+                                    <p:pickList id="assignedManagers" value="#{projectsBean.assignedManagers}" var="item"
+                                                itemLabel="#{item}"
+                                                itemValue="#{item}">
+                                        <f:facet name="sourceCaption">Domain Users (Role admin)</f:facet>  
+                                        <f:facet name="targetCaption">Project Managers</f:facet>  
+                                    </p:pickList>
+                                    <p:message for="assignedManagers"/>
+                                    
+                                    <h:outputText value="Note: Only project managers may create, delete and modify the project, its budgets, booking templates, budget control and budget plans."/>
+                                    
+                                </p:panel>
+                            </p>
+                            
+				<p:commandButton value="#{projectsBean.currentProject.id eq null ? 'Create' : 'Save'}" action="#{projectsBean.save}" ajax="false"/>
+				<p:commandButton rendered="#{projectsBean.currentProject.id ne null}" value="Cancel" action="#{projectsBean.clear}" ajax="false"/>
+			
+			</h:form>        
+			
+			<hr/>
+			
+			<h:form id="viewform">
+			
+                                <p:dataTable value="#{projectsBean.projects}" var="p" rowStyleClass="#{p.status==0 ? '' : 'rowgreyedout'}">
+					<p:column headerText="ID">
+						<h:outputText value="#{p.id}"/>
+					</p:column>
+					<p:column headerText="Name">
+						<h:outputText value="#{p.name}"/>
+					</p:column>
+					<p:column headerText="Domain">
+						<h:outputText value="#{projectsBean.getDomain(p.domainId).name}"/>
+					</p:column>
+					<p:column headerText="Project Managers">
+						<h:outputText value="#{projectsBean.getAssignedManagerList(p.id)}"/>
+					</p:column>
+					<p:column headerText="Actions">
+                                            <p:outputPanel rendered="#{projectsBean.isProjectManagedByMe(p)}">
+	                    <p:commandLink value="Edit" action="#{projectsBean.edit(p)}" ajax="false"> <p:resetInput target=":editform"/> </p:commandLink>,  
+	                    <p:commandLink value="Delete" action="#{projectsBean.delete(p)}" ajax="false"/>
+                            <h:panelGroup rendered="#{request.isUserInRole('superuser')}">, 
+                                <p:commandLink value="Drop" oncomplete="PF('confirmDropDialog').show()" update=":confirmDropDialogPanel">
+                                    <f:setPropertyActionListener value="#{p}" target="#{projectsBean.selectedForDrop}" />
+                                </p:commandLink>
+                            </h:panelGroup>
+                                            </p:outputPanel>
+					</p:column>
+				</p:dataTable>
+			
+			</h:form>
+
+            <p:outputPanel id="confirmDropDialogPanel">
+            <ui:include src="/WEB-INF/facelets/dialogbox.xhtml">
+                <ui:param name="widgetVar" value="confirmDropDialog"/>
+                <ui:param name="headerText" value="Really drop the project '#{projectsBean.selectedForDrop.name}'?"/>
+                <ui:param name="bean" value="#{projectsBean}"/>
+                <ui:param name="action" value="dropProject"/>
+                <ui:param name="dialogText" value="WARNING: All project data - including budgets, templates, bookings and budget plans - will be&lt;br/&gt;erased from the database. This cannot be undone. Do you really wish to proceed?"/>
+            </ui:include>  
+            </p:outputPanel>
+
+        </ui:define>
+        
+    </ui:composition>
+    
+
+
+</html>

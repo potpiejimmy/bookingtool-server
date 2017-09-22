@@ -1,0 +1,95 @@
+<?xml version='1.0' encoding='UTF-8' ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:ui="http://java.sun.com/jsf/facelets"
+      xmlns:h="http://java.sun.com/jsf/html"
+      xmlns:f="http://java.sun.com/jsf/core"
+      xmlns:p="http://primefaces.org/ui">
+    
+	<ui:composition template="/WEB-INF/facelets/templates/rootlayout.xhtml">
+
+		<ui:define name="pagetitle">Budget Planning Tool</ui:define>
+
+                <ui:define name="headerdivright">
+                    <h:form>
+                        <h:panelGrid columns="1">
+                            <p:commandLink id="logoutBtn" title="#{msg.log_off}" action="#{logoutBean.logout}" ajax="false" immediate="true" style="color:white !important;">
+                                <i class="fa fa-sign-out"/>
+                            </p:commandLink>
+                            <p:outputPanel><h:outputText value="#{request.userPrincipal.name}"/></p:outputPanel>
+                        </h:panelGrid>
+                    </h:form>
+                </ui:define>
+                
+		<ui:define name="rootbody">
+				
+				<h:form id="tabMenuForm">
+					<p:tabMenu id="tabMenu" activeIndex="${tabIndex}">  
+					    <p:menuitem value="Main" url="/restricted/maininputpanel.xhtml"/>  
+					    <p:menuitem value="Export" url="/restricted/excelexport.xhtml"/>
+					    <p:menuitem value="Domains" url="/restricted/domains.xhtml" rendered="#{request.isUserInRole('admin')}"/>  
+					    <p:menuitem value="Projects" url="/restricted/projects.xhtml" rendered="#{request.isUserInRole('admin')}"/>  
+					    <p:menuitem value="Budgets" url="/restricted/budgets.xhtml"/>
+					    <p:menuitem value="Booking Templates" url="/restricted/templates.xhtml"/>  
+					    <p:menuitem value="FI" url="/restricted/adminfi.xhtml" rendered="#{request.isUserInRole('admin')}"/>  
+					    <p:menuitem value="Budget Control" url="/restricted/budgetcontrol.xhtml"/>  
+					    <p:menuitem value="Budget Plans" url="/restricted/budgetplans.xhtml" rendered="#{request.isUserInRole('admin')}"/>  
+					    <p:menuitem value="Forecasts" url="/restricted/forecasts.xhtml" rendered="#{request.isUserInRole('admin')}"/>  
+					</p:tabMenu>
+                                        <p:notificationBar id="systemMsg" position="bottom" styleClass="bottom" autoDisplay="#{systemAdminBean.systemMsg ne null}">
+                                            <h:panelGrid columns="2">
+                                                <h:outputText styleClass="fa fa-warning"/>
+                                                <h:outputText value=" #{systemAdminBean.systemMsg}"/>
+                                            </h:panelGrid>
+                                        </p:notificationBar>
+                                        <p:poll interval="10" update="systemMsg" />
+				</h:form>  
+
+				<p/>
+
+                <ui:insert name="body"/>
+                        
+		</ui:define>
+
+		<ui:define name="rootfooter">
+			
+	        <div id="body_footer">
+                    <ui:insert name="body_footer"/>
+                </div>
+                
+	        <div id="root_footer">
+	            <hr/>
+	            <h:outputLink value="#{request.contextPath}/webres/help/about.xhtml">
+	            	<h:outputText value="About"/>
+	            </h:outputLink>,
+                    <h:panelGroup rendered="#{helpId ne null}">
+                        <h:outputLink value="#{request.contextPath}/webres/help/#{helpId}.xhtml">
+                            <h:outputText value="Help"/>
+                        </h:outputLink>,
+                    </h:panelGroup>
+	            <h:outputLink value="#{request.contextPath}/restricted/changepassword.xhtml">
+	            	<h:outputText value="Change Password"/>
+	            </h:outputLink>
+                    <h:panelGroup rendered="#{not request.isUserInRole('superuser')}">,
+                        <h:outputLink value="#{request.contextPath}/restricted/persplan.xhtml">
+                            <h:outputText value="My Plan"/>
+                        </h:outputLink>
+                    </h:panelGroup>
+                    <h:panelGroup rendered="#{request.isUserInRole('superuser')}">,
+                        <h:outputLink value="#{request.contextPath}/restricted/admin.xhtml">
+                            <h:outputText value="System Maintenance"/>
+                        </h:outputLink>,
+                        <h:outputLink value="#{request.contextPath}/restricted/adminuser.xhtml">
+                            <h:outputText value="Manage Users"/>
+                        </h:outputLink>,
+                        <h:outputLink value="#{request.contextPath}/restricted/adminresteams.xhtml">
+                            <h:outputText value="Manage Resource Teams"/>
+                        </h:outputLink>
+                    </h:panelGroup>
+	        </div>
+        
+		</ui:define>
+
+	</ui:composition>
+    
+</html>
