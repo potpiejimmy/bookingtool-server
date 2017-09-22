@@ -16,6 +16,8 @@ ear    - contains the files and descriptors need for building an enterprise
 
 ejb    - the application's EJB module containing session beans and interfaces,
          entity beans and core server classes.
+
+rest   - the application’s RESTful APIs
 		 
 war    - the application's web module containing the web frontend files and
          web services.
