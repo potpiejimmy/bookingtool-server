@@ -25,9 +25,12 @@ import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
+import org.apache.poi.ss.usermodel.FillPatternType;
+import org.apache.poi.ss.usermodel.HorizontalAlignment;
 import org.apache.poi.xssf.usermodel.XSSFCell;
 import org.apache.poi.xssf.usermodel.XSSFCellStyle;
 import org.apache.poi.ss.usermodel.IndexedColors;
+import org.apache.poi.ss.usermodel.VerticalAlignment;
 import org.apache.poi.xssf.usermodel.XSSFRichTextString;
 import org.apache.poi.xssf.usermodel.XSSFRow;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
@@ -291,10 +294,10 @@ public class ForecastsEJB {
 
         XSSFCellStyle headerStyle = wb.createCellStyle();
         headerStyle.setWrapText(true);
-        headerStyle.setAlignment(XSSFCellStyle.ALIGN_CENTER);
-        headerStyle.setVerticalAlignment(XSSFCellStyle.VERTICAL_TOP);
+        headerStyle.setAlignment(HorizontalAlignment.CENTER);
+        headerStyle.setVerticalAlignment(VerticalAlignment.TOP);
         headerStyle.setFillForegroundColor(IndexedColors.GREY_25_PERCENT.getIndex());
-        headerStyle.setFillPattern(XSSFCellStyle.SOLID_FOREGROUND);
+        headerStyle.setFillPattern(FillPatternType.SOLID_FOREGROUND);
 
         int rowIndex = 0;
         XSSFRow row;
