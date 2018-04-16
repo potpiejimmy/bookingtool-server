@@ -50,15 +50,15 @@
 						<h:outputText value="PSP Name Template:"/>
 						<p:inputText value="#{adminFIBean.current.pspNameTemplate}" size="40"/>
 						
-						<h:outputText value="MKS No.:"/>
+						<h:outputText value="JIRA Key:"/>
 						<h:panelGroup>
 							<p:inputText id="mks" value="#{adminFIBean.current.mksNo}" size="10">
-								<f:validateLength minimum="6" maximum="8"/>
+								<f:validateLength minimum="2" maximum="12"/>
 							</p:inputText>
 							<p:message for="mks" display="text"/>
 						</h:panelGroup>
 						
-						<h:outputText value="MKS Name:"/>
+						<h:outputText value="JIRA Name:"/>
 						<h:panelGroup>
 							<p:inputText id="mksname" value="#{adminFIBean.current.mksName}" size="80">
 								<f:validateLength minimum="3" maximum="220"/>
