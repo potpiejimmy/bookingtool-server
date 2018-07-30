@@ -16,7 +16,8 @@ public class SystemEJB {
 	//protected final static String EAR_FILE = "C:\\jboss-7.1.1\\standalone\\deployments\\bookingtool.ear";
 	//protected final static String EAR_FILE = "/opt/glassfish3/glassfish/domains/domain1/autodeploy/bookingtool.ear";
 	//protected final static String EAR_FILE = "/usr/jboss/standalone/deployments/bookingtool.ear";
-	protected final static String EAR_FILE = "/usr/wildfly10-bookingtool/standalone/deployments/bookingtool.ear";
+	//protected final static String EAR_FILE = "/usr/wildfly10-bookingtool/standalone/deployments/bookingtool.ear";
+	protected final static String EAR_FILE = "/home/ec2-user/wildfly10-bookingtool/standalone/deployments/bookingtool.ear";
 	
     @PersistenceContext(unitName = "EJBsPU")
     private EntityManager em;
