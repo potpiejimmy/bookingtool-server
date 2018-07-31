@@ -2,4 +2,8 @@
 /app/war/target/
 /app/rest/target/
 /app/ear/target/
+.classpath
+.project
+.factorypath
+.settings
 **/.DS_Store

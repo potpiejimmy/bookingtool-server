@@ -43,9 +43,13 @@ public class ExcelExportEJB {
 	public XSSFWorkbook getExcelForNamePpm(String person, int week, int year) {
 		
             Calendar fromDay = Calendar.getInstance();
-            fromDay.set(Calendar.DAY_OF_WEEK, Calendar.SUNDAY);
+            fromDay.set(Calendar.DAY_OF_WEEK, Calendar.MONDAY);
             fromDay.set(Calendar.WEEK_OF_YEAR, week);
             fromDay.set(Calendar.YEAR, year);
+            fromDay.set(Calendar.HOUR_OF_DAY, 0);
+            fromDay.set(Calendar.MINUTE, 0);
+            fromDay.set(Calendar.SECOND, 0);
+            fromDay.set(Calendar.MILLISECOND, 0);
             
             Calendar toDay = Calendar.getInstance();
             toDay.setTimeInMillis(fromDay.getTimeInMillis());

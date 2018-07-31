@@ -65,7 +65,7 @@ public class ExcelExportBean implements Serializable {
 	public StreamedContent getExcelPpm () {
 		
                 XSSFWorkbook wb = myExcelExportEJB.getExcelForNamePpm(WebUtils.getCurrentPerson(), getKwToExport(), getKwYearToExport());
-		return streamForWorkbook(wb, "buchungen_ppm_"+getKwYearToExport()+"_"+getKwToExport()+"_"+WebUtils.getCurrentPerson());
+		return streamForWorkbook(wb, "buchungen_ppm"+"_"+WebUtils.getCurrentPerson()+"_"+getKwYearToExport()+"_"+getKwToExport());
 	}
 	
 	public StreamedContent getExcelListProject () {

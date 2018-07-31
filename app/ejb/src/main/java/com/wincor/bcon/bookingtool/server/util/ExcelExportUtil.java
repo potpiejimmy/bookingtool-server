@@ -10,6 +10,9 @@ import com.wincor.bcon.bookingtool.server.db.entity.BookingTemplate;
 import com.wincor.bcon.bookingtool.server.ejb.BookingTemplatesEJB;
 import com.wincor.bcon.bookingtool.server.vo.BudgetInfoVo;
 import com.wincor.bcon.bookingtool.server.vo.SAPBooking;
+
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
@@ -260,6 +263,71 @@ public class ExcelExportUtil {
     }
     
     public static XSSFWorkbook createWorkbookForPpm(BookingTemplatesEJB bookingTemplateEJB, List<Object[]> bookingList, Calendar startOfWeek) {
-        return null; // XXX TODO
+        XSSFWorkbook wb = new XSSFWorkbook();
+        XSSFSheet sheet = wb.createSheet();
+        int rowPosition = 0;
+
+        final DateFormat WEEKDAY_FORMATTER = new SimpleDateFormat("E dd.MM.");
+        
+        XSSFRow row = sheet.createRow(rowPosition++);
+        int cellPosition = 0;
+        XSSFCell cell;
+        
+        cell = row.createCell(cellPosition++);
+        cell.setCellValue(new XSSFRichTextString("PSP"));
+        
+        cell = row.createCell(cellPosition++);
+        cell.setCellValue(new XSSFRichTextString("Name"));
+        
+        cell = row.createCell(cellPosition++);
+        cell.setCellValue(new XSSFRichTextString("VB"));
+        
+        cell = row.createCell(cellPosition++);
+        cell.setCellValue(new XSSFRichTextString("Category"));
+        
+        Calendar dayIter = Calendar.getInstance();
+        dayIter.setTimeInMillis(startOfWeek.getTimeInMillis());
+        
+        for (int i=0; i<5; i++)
+        {
+            cell = row.createCell(cellPosition++);
+            cell.setCellValue(new XSSFRichTextString(WEEKDAY_FORMATTER.format(dayIter.getTime())));
+
+            cell = row.createCell(cellPosition++);
+            cell.setCellValue(new XSSFRichTextString("GS"));
+            
+            dayIter.add(Calendar.DAY_OF_YEAR, 1);
+        }
+        
+        for(Object[] booking : bookingList)
+        {
+            cellPosition = 0;
+            row = sheet.createRow(rowPosition++);
+
+            //PSP
+            cell = row.createCell(cellPosition++);
+            cell.setCellValue(new XSSFRichTextString(""+booking[1]));
+            
+            //Name
+            cell = row.createCell(cellPosition++);
+            cell.setCellValue(new XSSFRichTextString(""+booking[2]));
+            
+            //Sales Representative
+            cell = row.createCell(cellPosition++);
+            cell.setCellValue(new XSSFRichTextString(""+booking[3]));
+            
+            //Category (Type 0W/1T)
+            cell = row.createCell(cellPosition++);
+            cell.setCellValue(new XSSFRichTextString(""+booking[4]));
+            
+            //Used
+            dayIter.setTime((Date)booking[0]);
+            cell = row.createCell(cellPosition + (dayIter.get(Calendar.DAY_OF_WEEK) - startOfWeek.get(Calendar.DAY_OF_WEEK)) * 2);
+            cell.setCellValue(((double)Math.round(((Long)booking[5]).doubleValue()/60*100))/100);
+        }
+        // autosize columns
+        for(int i = 0; i < sheet.getRow(0).getLastCellNum(); i++)	
+            sheet.autoSizeColumn(i);
+        return wb;
     }
 }
