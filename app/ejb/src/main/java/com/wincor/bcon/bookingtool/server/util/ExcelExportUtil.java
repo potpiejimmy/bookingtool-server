@@ -299,31 +299,38 @@ public class ExcelExportUtil {
             dayIter.add(Calendar.DAY_OF_YEAR, 1);
         }
         
+        int lastId = 0;
         for(Object[] booking : bookingList)
         {
-            cellPosition = 0;
-            row = sheet.createRow(rowPosition++);
-
-            //PSP
-            cell = row.createCell(cellPosition++);
-            cell.setCellValue(new XSSFRichTextString(""+booking[1]));
-            
-            //Name
-            cell = row.createCell(cellPosition++);
-            cell.setCellValue(new XSSFRichTextString(""+booking[2]));
-            
-            //Sales Representative
-            cell = row.createCell(cellPosition++);
-            cell.setCellValue(new XSSFRichTextString(""+booking[3]));
-            
-            //Category (Type 0W/1T)
-            cell = row.createCell(cellPosition++);
-            cell.setCellValue(new XSSFRichTextString(""+booking[4]));
-            
+        	int id = ((Integer)booking[0]).intValue();
+        	
+        	if (id != lastId) {
+        		lastId = id;
+        		
+	            cellPosition = 0;
+	            row = sheet.createRow(rowPosition++);
+	
+	            //PSP
+	            cell = row.createCell(cellPosition++);
+	            cell.setCellValue(new XSSFRichTextString(""+booking[2]));
+	            
+	            //Name
+	            cell = row.createCell(cellPosition++);
+	            cell.setCellValue(new XSSFRichTextString(""+booking[3]));
+	            
+	            //Sales Representative
+	            cell = row.createCell(cellPosition++);
+	            cell.setCellValue(new XSSFRichTextString(""+booking[4]));
+	            
+	            //Category (Type 0W/1T)
+	            cell = row.createCell(cellPosition++);
+	            cell.setCellValue(new XSSFRichTextString(""+booking[5]));
+        	}
+        	
             //Used
-            dayIter.setTime((Date)booking[0]);
+            dayIter.setTime((Date)booking[1]);
             cell = row.createCell(cellPosition + (dayIter.get(Calendar.DAY_OF_WEEK) - startOfWeek.get(Calendar.DAY_OF_WEEK)) * 2);
-            cell.setCellValue(((double)Math.round(((Long)booking[5]).doubleValue()/60*100))/100);
+            cell.setCellValue(((double)Math.round(((Long)booking[6]).doubleValue()/60*100))/100);
         }
         // autosize columns
         for(int i = 0; i < sheet.getRow(0).getLastCellNum(); i++)	
