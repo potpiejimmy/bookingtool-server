@@ -19,15 +19,15 @@ html, body {
     font-size: 13pt;
     padding: 5px;
     color: white;
-    height: 46px;
-    padding: 1em;
+    height: 72px;
+    padding: 0;
 }
 
 #root_title {
     float: left;
     font-size: 18px;
     line-height: 28px;
-    margin: 9px 20px;
+    margin: 20px 20px;
 }
 
 #root_body {

@@ -7,3 +7,7 @@
 .factorypath
 .settings
 **/.DS_Store
+
+#IntelliJ
+*/.idea/
+*.iml
